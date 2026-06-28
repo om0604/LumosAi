@@ -3,14 +3,10 @@ import faiss
 import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
-# Configuration
-EMBEDDING_MODEL = 'all-MiniLM-L6-v2'
-INDEX_FILE = 'faiss_index.index'
-METADATA_FILE = 'metadata.pkl'
+from config import config
 
 # Load embedding model
-embedder = SentenceTransformer(EMBEDDING_MODEL)
+embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
 def build_index(chunks, index_path=None, meta_path=None):
     """Generate embeddings and build FAISS index"""
@@ -25,8 +21,8 @@ def build_index(chunks, index_path=None, meta_path=None):
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
     
-    i_path = index_path or INDEX_FILE
-    m_path = meta_path or METADATA_FILE
+    i_path = index_path or os.path.join(config.BASE_DIR, config.INDEX_FILE)
+    m_path = meta_path or os.path.join(config.BASE_DIR, config.METADATA_FILE)
     faiss.write_index(index, i_path)
     with open(m_path, 'wb') as f:
         pickle.dump(metadata, f)
@@ -35,8 +31,8 @@ def build_index(chunks, index_path=None, meta_path=None):
     return index, metadata
 
 def load_index(index_path=None, meta_path=None):
-    i_path = index_path or INDEX_FILE
-    m_path = meta_path or METADATA_FILE
+    i_path = index_path or os.path.join(config.BASE_DIR, config.INDEX_FILE)
+    m_path = meta_path or os.path.join(config.BASE_DIR, config.METADATA_FILE)
     
     if not os.path.exists(i_path) or not os.path.exists(m_path):
         return None, None
@@ -63,11 +59,11 @@ def retrieve(query, top_k=5, index_path=None, meta_path=None):
     return results
 
 def generate_answer(query, contexts):
-    prompt_template = """You are a financial analyst assistant.
+    prompt_template = """You are an AI Document Assistant.
 
 Answer the question ONLY using the provided context.
 If the answer is not found in the context, respond:
-"The answer is not available in the Swiggy Annual Report."
+"The answer is not available in the provided document."
 
 Context:
 {context}
@@ -83,12 +79,12 @@ Answer:"""
     try:
         from groq import Groq
         # Initialize Groq client
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        client = Groq(api_key=config.GROQ_API_KEY)
         
-        # Call Groq API with LLaMA 3.1
+        # Call Groq API with configured model
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": formatted_prompt}],
-            model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
+            model=config.GROQ_MODEL,
             temperature=0,
             max_tokens=500,
         )

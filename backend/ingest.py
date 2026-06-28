@@ -45,7 +45,12 @@ def process_pdf(pdf_path: str):
     return chunks
 
 if __name__ == "__main__":
-    pdf_path = os.path.join(os.path.dirname(__file__), "data", "swiggy_annual_report.pdf")
+    import sys
+    if len(sys.argv) > 1:
+        pdf_path = sys.argv[1]
+    else:
+        pdf_path = os.path.join(os.path.dirname(__file__), "data", "swiggy_annual_report.pdf")
+    
     chunks = process_pdf(pdf_path)
     if chunks:
         print(f"Sample chunk: {chunks[0]}")
