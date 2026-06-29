@@ -8,8 +8,6 @@ class Config:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
     SIMILARITY_THRESHOLD: float = float(os.getenv("SIMILARITY_THRESHOLD", "1.5"))
-    INDEX_FILE: str = os.getenv("INDEX_FILE", "faiss_index.index")
-    METADATA_FILE: str = os.getenv("METADATA_FILE", "metadata.pkl")
     
     # Supabase Phase 2 Configuration
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")

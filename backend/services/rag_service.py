@@ -1,60 +1,62 @@
-import os
-import faiss
-import pickle
-import numpy as np
 from sentence_transformers import SentenceTransformer
 from config import config
+from database import get_supabase
 
 # Load embedding model
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
-def build_index(chunks, index_path=None, meta_path=None):
-    """Generate embeddings and build FAISS index"""
-    print("Generating embeddings...")
+def build_index(chunks, document_id: str):
+    """Generate embeddings and insert them into Supabase document_chunks table"""
+    print(f"Generating embeddings for {len(chunks)} chunks...")
     texts = [chunk['content'] for chunk in chunks]
     embeddings = embedder.encode(texts, show_progress_bar=True)
-    embeddings = np.array(embeddings).astype('float32')
     
-    metadata = {i: chunk for i, chunk in enumerate(chunks)}
+    supabase = get_supabase()
     
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(embeddings)
-    
-    i_path = index_path or os.path.join(config.BASE_DIR, config.INDEX_FILE)
-    m_path = meta_path or os.path.join(config.BASE_DIR, config.METADATA_FILE)
-    faiss.write_index(index, i_path)
-    with open(m_path, 'wb') as f:
-        pickle.dump(metadata, f)
+    # Insert in batches to prevent huge HTTP payloads
+    batch_size = 50
+    for i in range(0, len(chunks), batch_size):
+        batch_chunks = chunks[i:i + batch_size]
+        batch_embeddings = embeddings[i:i + batch_size]
         
-    print(f"Saved {len(chunks)} chunks to {i_path} and {m_path}")
-    return index, metadata
-
-def load_index(index_path=None, meta_path=None):
-    i_path = index_path or os.path.join(config.BASE_DIR, config.INDEX_FILE)
-    m_path = meta_path or os.path.join(config.BASE_DIR, config.METADATA_FILE)
-    
-    if not os.path.exists(i_path) or not os.path.exists(m_path):
-        return None, None
-    index = faiss.read_index(i_path)
-    with open(m_path, 'rb') as f:
-        metadata = pickle.load(f)
-    return index, metadata
-
-def retrieve(query, top_k=5, index_path=None, meta_path=None):
-    index, metadata = load_index(index_path, meta_path)
-    if index is None:
-        raise ValueError("FAISS index not found. Please build the index first.")
+        data = []
+        for j, chunk in enumerate(batch_chunks):
+            data.append({
+                "document_id": document_id,
+                "page_number": chunk['page'],
+                "chunk_number": i + j,
+                "content": chunk['content'],
+                "embedding": batch_embeddings[j].tolist()
+            })
         
-    query_embedding = embedder.encode([query]).astype('float32')
-    distances, indices = index.search(query_embedding, top_k)
+        supabase.table("document_chunks").insert(data).execute()
+        
+    print(f"Saved {len(chunks)} chunks to Supabase pgvector.")
+
+def retrieve(query, top_k=5):
+    """Retrieve nearest neighbor chunks via Supabase RPC"""
+    supabase = get_supabase()
+    
+    query_embedding = embedder.encode([query])[0].tolist()
+    
+    # Call the RPC function for vector similarity search
+    response = supabase.rpc(
+        "match_document_chunks",
+        {
+            "query_embedding": query_embedding,
+            "match_threshold": config.SIMILARITY_THRESHOLD,
+            "match_count": top_k
+        }
+    ).execute()
     
     results = []
-    for dist, idx in zip(distances[0], indices[0]):
-        if idx != -1:
-            chunk = metadata[idx].copy()
-            chunk['score'] = float(dist)
-            results.append(chunk)
+    for item in response.data:
+        # Map the DB schema back to the dictionary expected by the frontend
+        results.append({
+            "page": item["page_number"],
+            "content": item["content"],
+            "score": item["score"]
+        })
             
     return results
 
@@ -78,10 +80,8 @@ Answer:"""
     
     try:
         from groq import Groq
-        # Initialize Groq client
         client = Groq(api_key=config.GROQ_API_KEY)
         
-        # Call Groq API with configured model
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": formatted_prompt}],
             model=config.GROQ_MODEL,
