@@ -1,97 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swiggy Annual Report AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <title>AI Document Intelligence Platform</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide via CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-file-invoice-dollar"></i>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="flex items-center gap-sm" style="font-weight: 700; font-size: var(--font-size-lg);">
+                    <i data-lucide="layers" class="text-accent"></i>
+                    Document AI
+                </div>
+                
+                <input type="file" id="file-upload" accept="application/pdf" style="display: none;">
+                <button id="upload-btn" class="btn btn-primary w-full justify-center">
+                    <i data-lucide="upload" id="upload-icon"></i>
+                    Upload PDF
+                </button>
             </div>
-            <h1>Swiggy Annual Report Intelligence Engine</h1>
-            <p class="subtitle">Source-backed insights from Swiggy’s FY23 financial report.</p>
-            <p class="badge">RAG-Powered | Source-Grounded Answers</p>
-        </header>
-
-        <main>
-            <div class="search-container card-shadow">
-                <div class="input-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="question-input"
-                        placeholder="e.g., What were Swiggy’s key revenue drivers in FY23?" autofocus>
-                    <button id="submit-btn"><i class="fas fa-search"></i> <span>Analyze</span></button>
-                </div>
-
-                <div class="quick-prompts">
-                    <span>Suggested Questions:</span>
-                    <button class="prompt-btn" data-query="What were Swiggy’s key revenue drivers?">What were Swiggy’s
-                        key revenue drivers?</button>
-                    <button class="prompt-btn" data-query="Tell me about the corporate entity structure">Tell me about
-                        the corporate entity structure</button>
-                    <button class="prompt-btn" data-query="Tell me about history of Swiggy">Tell me about history of
-                        Swiggy</button>
-                    <button class="prompt-btn" data-query="Give a Business Overview of Swiggy">Give a Business Overview
-                        of Swiggy</button>
-                    <button class="prompt-btn" data-query="What is Share Capital and Debt Structure of Swiggy ?">What is
-                        Share Capital and Debt Structure of Swiggy ?</button>
-                </div>
+            
+            <div class="sidebar-content" id="document-list">
+                <!-- Document Cards injected here via ui.js -->
             </div>
+        </aside>
 
-            <div id="loading" class="hidden">
-                <div class="loading-animation">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-                <p class="loading-text" id="loading-status">Retrieving relevant sections...</p>
-            </div>
-
-            <div id="results-container" class="hidden">
-                <div class="answer-card card-shadow outline-border">
-                    <div class="answer-header">
-                        <h3><i class="fas fa-sparkles"></i> Answer</h3>
-                    </div>
-                    <div id="answer-text"></div>
-
-                    <div id="sources-summary" class="sources-list hidden">
-                        <!-- Sources list will be injected here -->
-                    </div>
-                </div>
-
-                <div class="context-card card-shadow">
-                    <button id="toggle-context" class="toggle-btn">
-                        <span><i class="fas fa-search-plus"></i> View Supporting Context</span>
-                        <i class="fas fa-chevron-down caret"></i>
+        <!-- Main Area -->
+        <main class="main-area">
+            <header class="chat-header">
+                <div class="flex items-center">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn">
+                        <i data-lucide="menu"></i>
                     </button>
-                    <div id="context-content" class="hidden">
-                        <!-- Context chunk extracts injected here -->
+                    <div id="chat-header">
+                        <!-- Dynamic Header injected here via ui.js -->
                     </div>
+                </div>
+            </header>
+            
+            <!-- Empty State -->
+            <div id="chat-empty-state" class="empty-state">
+                <i data-lucide="messages-square"></i>
+                <h2 style="font-weight: 600; font-size: var(--font-size-xl);">Welcome to Document AI</h2>
+                <p>Select a document from the sidebar to start chatting, or upload a new one.</p>
+            </div>
+
+            <!-- Chat History -->
+            <div class="chat-container hidden" id="chat-history">
+                <!-- Chat messages injected here via ui.js -->
+            </div>
+            
+            <!-- Input Area -->
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="chat-input" class="input-text chat-input" placeholder="Ask a question about this document...">
+                    <button id="chat-send-btn" class="chat-send-btn">
+                        <i data-lucide="send"></i>
+                    </button>
                 </div>
             </div>
         </main>
-
-        <footer>
-            <div class="tech-stack">Powered by FastAPI &bull; FAISS &bull; Sentence Transformers &bull; Groq LLaMA 3.1
-            </div>
-            <div class="admin-controls">
-                <button id="rebuild-btn" class="settings-btn" title="Refresh Knowledge Base"><i class="fas fa-sync"></i>
-                    Refresh Knowledge Base</button>
-            </div>
-        </footer>
     </div>
 
-    <div id="toast" class="toast hidden"></div>
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js"></script>
+    <!-- Application Logic -->
+    <script type="module" src="js/app.js"></script>
 </body>
-
 </html>

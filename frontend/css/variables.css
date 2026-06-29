@@ -1,0 +1,45 @@
+:root {
+    /* Colors */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F8FAFC;
+    --bg-sidebar: #F5F7FA;
+    
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-muted: #9CA3AF;
+    
+    --accent-primary: #2563EB;
+    --accent-hover: #1D4ED8;
+    
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    
+    --border-color: #E5E7EB;
+
+    /* Typography */
+    --font-family: 'Inter', sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 32px;
+
+    /* Border Radius */
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --radius-input: 12px;
+    --radius-tag: 999px;
+
+    /* Shadows */
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.05);
+    
+    /* Layout */
+    --sidebar-width: 300px;
+    --chat-max-width: 900px;
+    
+    /* Transitions */
+    --transition-fast: 200ms ease;
+}
