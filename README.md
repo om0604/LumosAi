@@ -1,95 +1,139 @@
-# Swiggy Annual Report RAG Application
+# Lumos
 
-## Project Overview
-This project is a Retrieval-Augmented Generation (RAG) QA application built to answer questions based on the Swiggy Annual Report. It uses a FastAPI backend and a vanilla HTML/JS/CSS frontend. The system grounds its answers solely in the provided document context to prevent hallucinations.
+> Chat with your documents. Upload PDFs, search instantly, and get accurate answers with cited sources.
 
-## Source Document
-The data source for this application is the publicly available Swiggy Annual Report. Ensure the PDF is placed at `backend/data/swiggy_annual_report.pdf` before running the API, or use the Rebuild Index feature in the frontend once placed.
-> [Source Link: Swiggy Annual Report (Please replace with actual link if available online)](https://www.swiggy.com/)
+Lumos is a premium, open-source AI Document Intelligence Platform. It allows users to upload multiple PDF documents, automatically chunks and indexes the text using local embeddings, and provides a polished, beautiful chat interface to ask questions about the documents using Retrieval-Augmented Generation (RAG).
+
+![Lumos Hero Placeholder](https://via.placeholder.com/1200x600?text=Lumos+AI+Document+Intelligence)
+
+---
+
+## Features
+
+- **Multi-Document Support:** Upload and manage multiple PDF documents simultaneously.
+- **Fast, Local Embeddings:** Text is chunked and embedded locally using `all-MiniLM-L6-v2` for speed and privacy.
+- **Vector Search:** Highly efficient cosine similarity search powered by Supabase `pgvector`.
+- **Accurate Citations:** Expandable source cards show exactly which pages and snippets the AI used to generate its answer.
+- **Premium UI:** A calm, spacious, and extremely polished UI inspired by modern AI tools (Claude, Granola, Notion AI) built with zero frontend dependencies.
+
+---
+
+## Architecture
+
+Lumos utilizes a decoupled architecture to separate concerns.
+
+```mermaid
+graph TD
+    User([User]) -->|Uploads PDF / Asks Question| Frontend[Frontend UI]
+    Frontend -->|REST API| API[FastAPI Backend]
+    
+    API -->|Metadata & Vector Insertions| DB[(Supabase Postgres & pgvector)]
+    API -->|File Storage| Storage[(Supabase Storage)]
+    API -->|Inference| Groq[Groq API LLM]
+```
 
 ## Tech Stack
-- **Backend Framework:** Python & FastAPI
-- **LLM Engine:** Groq API (`llama-3.1-8b-instant`)
-- **Token Embeddings:** `sentence-transformers/all-MiniLM-L6-v2`
-- **Vector Database:** FAISS (Facebook AI Similarity Search)
-- **Document Processing:** LangChain (RecursiveCharacterTextSplitter) & PyPDF
-- **Frontend UI:** Vanilla HTML, CSS, JavaScript
 
-## How to Run
+### Frontend
+- HTML5, CSS3 (Custom Properties), ES6 JavaScript (No frameworks)
+- `marked.js` for markdown rendering
+- `lucide` for iconography
 
-### 1. Setup Environment
+### Backend
+- **Framework:** FastAPI (Python)
+- **PDF Processing:** PyPDF
+- **Chunking:** LangChain RecursiveCharacterTextSplitter
+- **Embeddings:** SentenceTransformers (`all-MiniLM-L6-v2`)
+- **LLM:** Groq API (Llama3/Mixtral)
 
-**Python Version:** Python 3.9+ is required.
+### Database
+- **Provider:** Supabase
+- **Extensions:** `pgvector` for semantic search
+- **Storage:** Supabase Storage for raw PDF persistence
 
-Create and activate a virtual environment:
+---
 
-```bash
-cd backend
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
+## Project Structure
+
+```text
+Lumos/
+├── backend/                  # FastAPI Application
+├── frontend/                 # Vanilla JS / HTML / CSS Client
+└── docs/                     # Technical Documentation
 ```
 
-Install the required dependencies:
+Please refer to the `docs/` folder for deeper dives into the [Architecture](docs/architecture.md), [Database](docs/database.md), and [Frontend](docs/frontend.md).
+
+---
+
+## Getting Started
+
+### Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```env
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-service-role-key
+GROQ_API_KEY=your-groq-api-key
+GROQ_MODEL=llama3-8b-8192
+SIMILARITY_THRESHOLD=0.3
+```
+
+### Database Setup
+
+1. Create a Supabase project.
+2. Enable `pgvector`.
+3. Run the SQL schemas located in `docs/sql/` in the Supabase SQL editor.
+4. Create a public storage bucket named `reports`.
+
+### Running Locally
+
+**Start the Backend:**
 ```bash
+cd backend
 pip install -r requirements.txt
-```
-
-### 2. Set API Keys
-Create a `.env` file in the `backend/` directory by copying `.env.example`:
-
-**Windows:**
-```cmd
-copy backend\.env.example backend\.env
-```
-
-**Mac/Linux:**
-```bash
-cp backend/.env.example backend/.env
-```
-
-Open the new `.env` file and populate it with your environment variables:
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-SUPABASE_BUCKET=documents
-DATABASE_URL=your_postgresql_connection_string
-GROQ_API_KEY=your_groq_api_key_here
-```
-
-### 3. Run the Backend API
-```bash
-cd backend
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Ensure your `swiggy_annual_report.pdf` is placed inside the `backend/data/` folder (for the current local testing phase). The backend API will be available at `http://localhost:8000`.
 
-### 4. Run the Frontend
-You can serve the `frontend/` directory using any local web server, for instance:
+**Start the Frontend:**
 ```bash
 cd frontend
 python -m http.server 8080
 ```
-Open `http://localhost:8080` in your web browser. 
+Open your browser to `http://localhost:8080`.
 
-**First Run Setup:** When you open the UI for the first time, click the **"Refresh Knowledge Base"** button at the bottom of the page. This tells the backend to ingest the PDF and build the FAISS vector database.
+---
 
-## Sample Questions for Testing
-Here are some sample questions you can test the system with:
-1. What was Swiggy’s total revenue in FY23?
-2. What were the key risk factors mentioned?
-3. What is Instamart performance?
-4. What was EBITDA margin?
+## API Overview
 
-## Limitations
-- **PDF Scans & Layouts:** Heavily formatted tables or infographics in the PDF might lose layout context during PyPDF extraction.
-- **Model Restraints:** Small chunks (800 chars) might cut off contiguous thought.
-- **Similarity Thresholds:** In rare instances, paraphrased questions might score poorly on L2 distance with exact-match text, triggering the hallucination prevention guard.
+- `GET /api/documents/`: List all documents.
+- `POST /api/documents/`: Upload a new PDF.
+- `DELETE /api/documents/{id}`: Delete a document.
+- `POST /api/chat/`: Query a document using RAG.
 
-## Additional Features
-- **Rebuild Index Endpoint:** Dynamically parse the PDF and refresh embeddings through the backend or UI button.
-- **Score Visibility:** The UI shows similarity strength for each returned data chunk.
-- **Hallucination Protection Level:** Strict similarity bounds automatically reject low-confidence searches.
-- **Citations:** Responses display specific page numbers generated by the chunk metadata.
+See [api.md](docs/api.md) for detailed payloads.
+
+---
+
+## Deployment
+
+Lumos is designed to be fully deployable on free-tier platforms.
+See [deployment.md](docs/deployment.md) for full instructions on deploying to Render, Vercel, and Supabase.
+
+---
+
+## Future Roadmap
+
+- [ ] Chat history persistence
+- [ ] Multi-document cross-referencing queries
+- [ ] Support for DOCX and TXT files
+- [ ] Streaming LLM responses (Server-Sent Events)
+
+---
+
+## License
+MIT License.
+
+## Author
+Open Source AI Community.

@@ -1,20 +1,27 @@
+from typing import List, Dict, Any
 from sentence_transformers import SentenceTransformer
+from groq import Groq
 from config import config
 from database import get_supabase
 
-# Load embedding model
+# Load embedding model globally to avoid reloading on every request
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
-def build_index(chunks, document_id: str):
-    """Generate embeddings and insert them into Supabase document_chunks table"""
-    print(f"Generating embeddings for {len(chunks)} chunks...")
+def build_index(chunks: List[Dict[str, Any]], document_id: str) -> None:
+    """
+    Generate embeddings for document chunks and insert them into the Supabase database.
+    
+    Args:
+        chunks: List of dictionaries containing page number and text content.
+        document_id: The UUID of the document these chunks belong to.
+    """
     texts = [chunk['content'] for chunk in chunks]
-    embeddings = embedder.encode(texts, show_progress_bar=True)
+    embeddings = embedder.encode(texts, show_progress_bar=False)
     
     supabase = get_supabase()
+    batch_size = 50
     
     # Insert in batches to prevent huge HTTP payloads
-    batch_size = 50
     for i in range(0, len(chunks), batch_size):
         batch_chunks = chunks[i:i + batch_size]
         batch_embeddings = embeddings[i:i + batch_size]
@@ -30,16 +37,22 @@ def build_index(chunks, document_id: str):
             })
         
         supabase.table("document_chunks").insert(data).execute()
-        
-    print(f"Saved {len(chunks)} chunks to Supabase pgvector.")
 
-def retrieve(query: str, document_id: str, top_k: int = 5):
-    """Retrieve nearest neighbor chunks via Supabase RPC"""
-    supabase = get_supabase()
+def retrieve(query: str, document_id: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    """
+    Retrieve nearest neighbor chunks via Supabase pgvector RPC.
     
+    Args:
+        query: The user's question.
+        document_id: The UUID of the document to search within.
+        top_k: Number of most relevant chunks to return.
+        
+    Returns:
+        List of relevant contexts with page numbers and relevance scores.
+    """
+    supabase = get_supabase()
     query_embedding = embedder.encode([query])[0].tolist()
     
-    # Call the RPC function for vector similarity search
     response = supabase.rpc(
         "match_document_chunks",
         {
@@ -52,7 +65,6 @@ def retrieve(query: str, document_id: str, top_k: int = 5):
     
     results = []
     for item in response.data:
-        # Map the DB schema back to the dictionary expected by the frontend
         results.append({
             "page": item["page_number"],
             "content": item["content"],
@@ -61,7 +73,17 @@ def retrieve(query: str, document_id: str, top_k: int = 5):
             
     return results
 
-def generate_answer(query, contexts):
+def generate_answer(query: str, contexts: List[Dict[str, Any]]) -> str:
+    """
+    Generate an answer using Groq LLM based strictly on the provided context.
+    
+    Args:
+        query: The user's question.
+        contexts: List of retrieved text chunks from the document.
+        
+    Returns:
+        The generated answer string.
+    """
     prompt_template = """You are an AI Document Assistant.
 
 Answer the question ONLY using the provided context.
@@ -80,7 +102,6 @@ Answer:"""
     formatted_prompt = prompt_template.format(context=context_text, question=query)
     
     try:
-        from groq import Groq
         client = Groq(api_key=config.GROQ_API_KEY)
         
         chat_completion = client.chat.completions.create(
