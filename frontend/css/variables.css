@@ -1,45 +1,56 @@
 :root {
     /* Colors */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F8FAFC;
-    --bg-sidebar: #F5F7FA;
+    --bg-primary: #F8F5F2; /* Creamy warm white */
+    --bg-secondary: #FFFDFB; /* Cleaner white for chat */
+    --bg-sidebar: #F5F1ED;
+    --bg-sidebar-hover: #EBE5E0;
     
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --text-muted: #9CA3AF;
+    --text-primary: #1B1B1B;
+    --text-secondary: #6B6B6B;
+    --text-tertiary: #A3A3A3;
     
-    --accent-primary: #2563EB;
-    --accent-hover: #1D4ED8;
+    --accent-primary: #B65C2A;
+    --accent-hover: #D0703B;
+    --accent-subtle: #F3EAE3;
     
-    --color-success: #10B981;
-    --color-warning: #F59E0B;
-    --color-error: #EF4444;
+    --color-success: #3A7D44;
+    --color-warning: #D97706;
+    --color-error: #DC2626;
     
-    --border-color: #E5E7EB;
+    --border-color: #E8E2DB;
+    --border-color-light: #F0EBE6;
 
     /* Typography */
-    --font-family: 'Inter', sans-serif;
+    --font-display: 'Playfair Display', serif;
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    
     --font-size-xs: 12px;
     --font-size-sm: 14px;
     --font-size-md: 16px;
     --font-size-lg: 18px;
     --font-size-xl: 20px;
     --font-size-2xl: 24px;
-    --font-size-3xl: 32px;
+    --font-size-3xl: 36px;
+    --font-size-4xl: 48px;
 
     /* Border Radius */
-    --radius-card: 16px;
-    --radius-btn: 12px;
-    --radius-input: 12px;
-    --radius-tag: 999px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-card: 18px;
+    --radius-input: 16px;
+    --radius-btn: 999px;
+    --radius-badge: 999px;
 
     /* Shadows */
-    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 8px rgba(27, 27, 27, 0.04);
+    --shadow-md: 0 8px 24px rgba(27, 27, 27, 0.06);
+    --shadow-lg: 0 20px 40px -10px rgba(27, 27, 27, 0.08);
+    --shadow-focus: 0 0 0 3px rgba(182, 92, 42, 0.3);
     
     /* Layout */
-    --sidebar-width: 300px;
-    --chat-max-width: 900px;
+    --sidebar-width: 320px;
+    --chat-max-width: 960px; /* Readable line length */
     
     /* Transitions */
-    --transition-fast: 200ms ease;
+    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }

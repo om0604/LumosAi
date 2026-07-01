@@ -1,154 +1,246 @@
-AI Document Intelligence Platform
-DESIGN.md
+# Lumos Design System v1.0
 
-Design Philosophy
+> Product Name: Lumos
 
-Build a clean, premium SaaS application.
+> Tagline:
+Chat with your documents.
 
-The design should feel similar to modern AI products like
+> Hero Description:
+Upload PDFs, search instantly, and get accurate answers with cited sources.
 
-ChatGPT
-Claude
-Notion AI
-Linear
-Vercel Dashboard
+---
 
-Avoid flashy gradients, excessive glassmorphism, or bright colors.
+# Design Philosophy
 
-The interface should emphasize readability, simplicity, and professionalism.
+Lumos should not look like a college project or another ChatGPT clone.
 
-Design Principles
+It should feel like a premium AI SaaS product that combines the warmth of editorial websites with the simplicity of modern software.
 
-Prioritize
+The visual inspiration comes from:
 
-clarity
-consistency
-accessibility
-responsiveness
-whitespace
-hierarchy
+- Claude
+- Linear
+- Notion
+- Vercel
+- Apple
+- Editorial magazine layouts
 
-Every component should look like it belongs to the same design system.
+Avoid flashy AI aesthetics.
 
-Color Palette
-Background
+Avoid neon colors.
 
-Primary
+Avoid excessive gradients.
 
-#FFFFFF
+Avoid glassmorphism.
 
-Secondary
+The UI should communicate calmness, intelligence, and trust.
 
-#F8FAFC
+Every screen should feel spacious.
 
-Sidebar
+Whitespace is a feature.
 
-#F5F7FA
-Text
+---
 
-Primary
+# Brand Personality
 
-#111827
+Lumos helps users understand documents.
 
-Secondary
+The interface should feel:
 
-#6B7280
+- Warm
+- Intelligent
+- Minimal
+- Premium
+- Calm
+- Professional
 
-Muted
+Never playful.
 
-#9CA3AF
-Primary Accent
+Never futuristic.
 
-Blue
+Never cyberpunk.
 
-#2563EB
+---
 
-Hover
+# Hero Section
 
-#1D4ED8
-Success
-#10B981
-Warning
-#F59E0B
-Error
-#EF4444
-Typography
+Heading:
 
-Font
+Chat with your documents.
+
+Description:
+
+Upload PDFs, search instantly, and get accurate answers with cited sources.
+
+Keep the heading large.
+
+The heading should be the first visual focus.
+
+---
+
+# Typography
+
+Use two fonts.
+
+## Display Font
+
+Use a premium editorial serif similar to the reference image.
+
+Preferred order:
+
+- Cormorant Garamond
+- DM Serif Display
+- Playfair Display
+
+This font should ONLY be used for:
+
+- Hero title
+- Main page headings
+
+Never use it for body text.
+
+---
+
+## UI Font
+
+Use:
 
 Inter
 
-Fallback
+Fallback:
 
-sans-serif
+system-ui
 
-Sizes
+Use Inter everywhere else:
 
-12
-14
-16
-18
-20
-24
-32
+- Sidebar
+- Buttons
+- Chat
+- Cards
+- Inputs
+- Navigation
 
-Weights
+---
 
-400
-500
-600
-700
-Border Radius
+# Color Palette
+
+Primary Background
+
+#F8F5F2
+
+Secondary Background
+
+#FFFDFB
+
+Sidebar
+
+#F5F1ED
+
+Primary Text
+
+#1B1B1B
+
+Secondary Text
+
+#6B6B6B
+
+Borders
+
+#E8E2DB
+
+Primary Accent
+
+#B65C2A
+
+Hover Accent
+
+#D0703B
+
+Success
+
+#3A7D44
+
+Warning
+
+#D97706
+
+Danger
+
+#DC2626
+
+Never use bright blue as the primary accent.
+
+---
+
+# Border Radius
 
 Cards
 
-16px
+18px
 
 Buttons
 
-12px
+999px
 
 Inputs
 
-12px
+16px
 
-Tags
+Badges
 
 999px
-Shadows
 
-Use only subtle shadows.
+---
 
-Never use heavy shadows.
+# Shadows
 
-0 2px 8px rgba(0,0,0,0.05)
-Layout
+Very subtle.
+
+Large blurry shadows.
+
+No floating glass cards.
+
+No harsh drop shadows.
+
+---
+
+# Layout
 
 Desktop
 
-Sidebar
+300px sidebar
 
-300px
+Remaining width for chat
 
-Chat Area
+Maximum content width:
 
-Fluid
+1400px
 
-Maximum content width
+Lots of spacing.
 
-900px
-Sidebar
+---
 
-Contains
+# Sidebar
+
+Contains:
 
 Logo
-Upload button
-Search documents
-Document list
-Status badges
-Delete button
 
-Each document card should display
+Upload button
+
+Search
+
+Document list
+
+Storage usage
+
+Sidebar should never feel crowded.
+
+---
+
+# Document Card
+
+Display:
 
 PDF icon
 
@@ -156,156 +248,132 @@ Filename
 
 Page count
 
-Upload date
-
-Status
-Document Status
-
-Processing
-
-Yellow
-
-Ready
-
-Green
-
-Failed
-
-Red
-
-Chat Layout
-
-Top
-
-Document title
+File size
 
 Status
 
-Actions
+Last updated
 
-Middle
+Selected document should have:
+
+- Warm accent border
+- Slight background tint
+
+---
+
+# Chat Area
+
+Header:
+
+Current document name
+
+Status badge
+
+Divider
 
 Conversation
 
-Bottom
+Input
 
-Chat input
+The conversation should occupy most of the screen.
 
-Send button
+---
 
-Chat Messages
+# Chat Messages
 
 User
 
 Right aligned
 
-Blue bubble
+Accent background
+
+Rounded bubble
 
 Assistant
 
 Left aligned
 
-White card
+White background
 
-Sources appear below every answer.
+Subtle border
 
-Source Cards
+Maximum readability.
 
-Each answer should show source cards.
+---
 
-Each source card contains
+# Source Cards
+
+Every answer should include beautiful citation cards.
+
+Each source card contains:
 
 Page Number
 
-Similarity Score
-
 Snippet
+
+Similarity score
 
 Cards should be collapsible.
 
-Upload Experience
+---
 
-Drag & Drop
-
-OR
-
-Upload Button
-
-Show
-
-Progress
-
-Processing
-
-Ready
-
-Failure
-
-Empty States
-
-No documents
-
-Illustration
-
-Title
-
-Description
-
-Upload button
-
-No chat
-
-Friendly prompt
-
-Buttons
+# Buttons
 
 Primary
 
-Blue filled
-
-Secondary
-
-Gray outlined
-
-Danger
-
-Red
-
-Inputs
+Warm orange
 
 Rounded
 
-12px radius
+Medium weight
 
-Visible focus state
+Hover:
 
-Placeholder text
+Slight lift
 
-Tables
+Slight darkening
 
-Rounded
+Never animate excessively.
 
-Alternating row hover
+---
 
-Minimal borders
+# Upload Experience
 
-Icons
+Upload button should feel premium.
 
-Use
+During upload:
 
-Lucide Icons
+Show progress.
 
-Only
+Show Processing badge.
 
-No emojis.
+After completion:
 
-Animations
+Ready badge.
 
-Duration
+---
 
-200ms
+# Empty States
 
-Use
+If no documents exist:
+
+Large illustration
+
+Headline:
+
+Upload your first document
+
+Description explaining the product.
+
+---
+
+# Animations
+
+Duration:
+
+180ms–220ms
+
+Use:
 
 Fade
 
@@ -313,124 +381,66 @@ Slide
 
 Scale
 
-Avoid
+Never bounce.
 
-Bounce
+Never spin endlessly.
 
-Rotate
+---
 
-Complex motion
+# Icons
 
-Loading States
+Use Lucide Icons.
 
-Skeleton loaders
+Consistent stroke width.
 
-Button spinner
+Minimal.
 
-Upload progress
+---
 
-Typing indicator
-
-Responsive Behaviour
+# Responsive
 
 Desktop
 
-Sidebar visible
+Sidebar visible.
 
 Tablet
 
-Collapsible sidebar
+Collapsible sidebar.
 
 Mobile
 
-Drawer navigation
+Sidebar becomes drawer.
 
-Bottom-fixed chat input
+Chat remains primary.
 
-No horizontal scrolling.
+---
 
-Accessibility
+# Accessibility
 
-Minimum contrast ratio AA
+High contrast.
 
-Keyboard navigation
+Keyboard navigation.
 
-Visible focus
+Visible focus rings.
 
-ARIA labels
+44px touch targets.
 
-Semantic HTML
+---
 
-Component Rules
+# General Rules
 
-Every UI component must be reusable.
+Never use more than two fonts.
 
-Avoid duplicated HTML.
+Never use more than one accent color.
 
-Avoid duplicated CSS.
+Prefer whitespace over decoration.
 
-Prefer utility classes.
+Prefer typography over graphics.
 
-CSS Organization
-variables
+Avoid unnecessary borders.
 
-layout
+Keep visual hierarchy extremely clear.
 
-components
+The interface should feel like software people would happily use for hours.
 
-utilities
-
-animations
-
-responsive
-JavaScript Organization
-api.js
-
-ui.js
-
-app.js
-
-helpers.js
-Naming Convention
-
-Classes
-
-kebab-case
-
-Variables
-
-camelCase
-
-Constants
-
-UPPER_CASE
-Future Compatibility
-
-The design system must support future additions without redesign.
-
-Examples
-
-authentication
-user profiles
-multiple workspaces
-dark mode
-document folders
-search
-AI agents
-analytics
-admin dashboard
-
-No existing component should need redesign when these features are added.
-
-Definition of Done
-
-The UI is complete only if it is
-
-Responsive
-Accessible
-Consistent
-Reusable
-Modular
-Performance optimized
-Easy to extend
-Portfolio quality
+Whenever implementation decisions are unclear, prioritize simplicity and readability over visual complexity.

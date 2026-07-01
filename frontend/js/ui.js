@@ -26,7 +26,7 @@ export function renderDocumentList(onSelect, onDelete) {
     
     if (state.documents.length === 0) {
         container.innerHTML = `
-            <div class="text-center text-muted text-sm" style="padding: 24px 0;">
+            <div style="padding: 24px 0; text-align: center; color: var(--text-tertiary); font-size: var(--font-size-sm);">
                 No documents uploaded yet.
             </div>
         `;
@@ -35,7 +35,8 @@ export function renderDocumentList(onSelect, onDelete) {
     
     state.documents.forEach(doc => {
         const card = document.createElement('div');
-        card.className = `doc-card ${state.currentDocumentId === doc.id ? 'active' : ''}`;
+        const isActive = state.currentDocumentId === doc.id;
+        card.className = `doc-card ${isActive ? 'active' : ''}`;
         card.onclick = () => onSelect(doc.id);
         
         let statusClass = 'badge-processing';
@@ -43,18 +44,23 @@ export function renderDocumentList(onSelect, onDelete) {
         if (doc.status === 'Failed') statusClass = 'badge-failed';
         
         card.innerHTML = `
-            <div class="doc-title">
-                <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
-                <span class="truncate" title="${escapeHTML(doc.filename)}">${escapeHTML(doc.filename)}</span>
+            <div class="doc-title" title="${escapeHTML(doc.filename)}">
+                <i data-lucide="file-text" style="min-width: 18px; height: 18px; color: ${isActive ? 'var(--accent-primary)' : 'var(--text-secondary)'};"></i>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(doc.filename)}</span>
             </div>
+            
             <div class="doc-meta">
-                <span>${formatBytes(doc.size_bytes)} • ${doc.page_count} pages</span>
-                <span class="badge ${statusClass}">${doc.status}</span>
+                <span>${formatBytes(doc.size_bytes)}</span>
+                <span>${doc.page_count} pages</span>
             </div>
-            <div class="flex justify-between items-center" style="margin-top: 4px;">
-                <span class="text-xs text-muted">${formatDate(doc.created_at)}</span>
-                <button class="btn btn-danger delete-btn" data-id="${doc.id}" style="padding: 4px; font-size: 14px;">
-                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            
+            <div class="doc-footer">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge ${statusClass}">${doc.status}</span>
+                    <span style="font-size: 11px; color: var(--text-tertiary);">${formatDate(doc.created_at)}</span>
+                </div>
+                <button class="delete-btn" data-id="${doc.id}" title="Delete document">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                 </button>
             </div>
         `;
@@ -74,23 +80,19 @@ export function renderDocumentList(onSelect, onDelete) {
 }
 
 export function renderChatHeader() {
-    const header = document.getElementById('chat-header');
+    const headerContent = document.getElementById('chat-header-content');
     const doc = state.getCurrentDocument();
     
     if (!doc) {
-        header.innerHTML = `
-            <div class="flex items-center gap-sm text-muted">
-                <i data-lucide="inbox"></i>
-                <span>No document selected</span>
-            </div>
+        headerContent.innerHTML = `
+            <i data-lucide="inbox" style="color: var(--text-tertiary);"></i>
+            <span style="color: var(--text-secondary); font-weight: 500;">No document selected</span>
         `;
     } else {
-        header.innerHTML = `
-            <div class="flex items-center gap-sm">
-                <i data-lucide="file-text" class="text-muted"></i>
-                <span style="font-weight: 600;">${escapeHTML(doc.filename)}</span>
-                <span class="badge badge-ready" style="margin-left: 8px;">Ready</span>
-            </div>
+        headerContent.innerHTML = `
+            <i data-lucide="file-text" style="color: var(--text-secondary);"></i>
+            <span style="font-weight: 600; font-size: var(--font-size-lg); color: var(--text-primary);">${escapeHTML(doc.filename)}</span>
+            <span class="badge badge-ready" style="margin-left: 12px;">Ready</span>
         `;
     }
     
@@ -120,19 +122,23 @@ export function appendAssistantMessage(answer, sources) {
     const msg = document.createElement('div');
     msg.className = 'message assistant';
     
-    // Parse Markdown if marked is available
     const parsedAnswer = window.marked ? window.marked.parse(answer) : escapeHTML(answer);
     
     let sourcesHTML = '';
     if (sources && sources.length > 0) {
         sourcesHTML = `
             <div class="sources-container">
-                <div class="text-xs text-muted" style="margin-bottom: 8px; font-weight: 600; text-transform: uppercase;">Sources</div>
+                <div style="font-size: var(--font-size-xs); color: var(--text-secondary); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <i data-lucide="library" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Sources
+                </div>
                 ${sources.map((s, i) => `
                     <div class="source-card">
-                        <div class="source-header" onclick="this.nextElementSibling.classList.toggle('open')">
-                            <span>Page ${s.page} • Score: ${(s.score).toFixed(2)}</span>
-                            <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                        <div class="source-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="source-meta">
+                                <span>Page ${s.page}</span>
+                                <span class="source-score">Relevance: ${Math.round(s.score * 100)}%</span>
+                            </div>
+                            <i data-lucide="chevron-down" class="source-icon" style="width: 16px; height: 16px;"></i>
                         </div>
                         <div class="source-body">
                             ${escapeHTML(s.content)}
@@ -144,13 +150,12 @@ export function appendAssistantMessage(answer, sources) {
     }
     
     msg.innerHTML = `
-        <div class="message-bubble w-full">
+        <div class="message-bubble">
             ${parsedAnswer}
             ${sourcesHTML}
         </div>
     `;
     
-    // Remove loading skeleton if present
     const skeleton = document.getElementById('chat-skeleton');
     if (skeleton) skeleton.remove();
     
@@ -165,7 +170,7 @@ export function appendSkeletonLoader() {
     msg.className = 'message assistant';
     msg.id = 'chat-skeleton';
     msg.innerHTML = `
-        <div class="message-bubble w-full" style="padding: 16px;">
+        <div class="message-bubble">
             <div class="skeleton skeleton-text"></div>
             <div class="skeleton skeleton-text"></div>
             <div class="skeleton skeleton-text short"></div>
@@ -175,15 +180,13 @@ export function appendSkeletonLoader() {
     container.scrollTop = container.scrollHeight;
 }
 
-export function setUploadLoading(isLoading) {
-    const btn = document.getElementById('upload-btn');
-    const icon = document.getElementById('upload-icon');
-    if (isLoading) {
-        btn.disabled = true;
-        icon.outerHTML = '<i data-lucide="loader" id="upload-icon" class="spinner"></i>';
-    } else {
-        btn.disabled = false;
-        icon.outerHTML = '<i data-lucide="upload" id="upload-icon"></i>';
-    }
+
+
+export function resetUploadButton(btn) {
+    btn.disabled = false;
+    btn.innerHTML = `
+        <i data-lucide="plus" id="upload-icon"></i>
+        New Document
+    `;
     if (window.lucide) window.lucide.createIcons();
 }

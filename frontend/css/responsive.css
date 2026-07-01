@@ -1,4 +1,10 @@
 /* Tablet and below */
+@media (max-width: 1024px) {
+    .chat-content {
+        padding: 0 24px 40px;
+    }
+}
+
 @media (max-width: 768px) {
     .app-container {
         position: relative;
@@ -12,8 +18,8 @@
         z-index: 100;
         transform: translateX(-100%);
         transition: transform var(--transition-fast);
-        width: 280px;
-        box-shadow: var(--shadow-subtle);
+        width: 300px;
+        box-shadow: var(--shadow-lg);
     }
 
     .sidebar.open {
@@ -21,7 +27,20 @@
     }
 
     .mobile-menu-btn {
-        display: block !important;
+        display: flex !important;
+    }
+    
+    .chat-header {
+        padding: 0 24px;
+    }
+    
+    .chat-input-area {
+        padding: 16px 24px 24px;
+    }
+    
+    .message-bubble {
+        max-width: 95%;
+        padding: 20px 24px;
     }
 }
 
@@ -34,4 +53,11 @@
     cursor: pointer;
     padding: 8px;
     margin-right: 16px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.mobile-menu-btn:hover {
+    background-color: var(--bg-sidebar);
 }

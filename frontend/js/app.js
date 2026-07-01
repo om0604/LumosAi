@@ -2,13 +2,14 @@ import { state } from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 
+let uploadSimulationInterval;
+
 async function loadDocuments() {
     try {
         const docs = await api.fetchDocuments();
         state.setDocuments(docs);
         ui.renderDocumentList(handleSelectDocument, handleDeleteDocument);
         
-        // Auto-select newest ready document if none selected
         if (!state.currentDocumentId && docs.length > 0) {
             const readyDoc = docs.find(d => d.status === 'Ready');
             if (readyDoc) {
@@ -20,15 +21,41 @@ async function loadDocuments() {
     }
 }
 
+function startUploadSimulation(btn) {
+    const states = [
+        "Uploading...",
+        "Extracting text...",
+        "Generating embeddings...",
+        "Saving..."
+    ];
+    let i = 0;
+    btn.disabled = true;
+    
+    // Initial state
+    btn.innerHTML = `<div class="upload-status flex items-center justify-center gap-sm" style="animation: slideIn 200ms ease;"><i data-lucide="loader" class="spinner"></i>${states[0]}</div>`;
+    if (window.lucide) window.lucide.createIcons();
+    
+    uploadSimulationInterval = setInterval(() => {
+        i++;
+        if (i < states.length) {
+            btn.innerHTML = `<div class="upload-status flex items-center justify-center gap-sm" style="animation: slideIn 200ms ease;"><i data-lucide="loader" class="spinner"></i>${states[i]}</div>`;
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }, 2000);
+}
+
+function stopUploadSimulation(btn) {
+    clearInterval(uploadSimulationInterval);
+    ui.resetUploadButton(btn);
+}
+
 async function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Reset file input
     e.target.value = '';
-    
-    ui.setUploadLoading(true);
-    ui.showToast("Uploading and processing document... this may take a moment.", 'success');
+    const btn = document.getElementById('upload-btn');
+    startUploadSimulation(btn);
     
     try {
         await api.uploadDocument(file);
@@ -37,7 +64,7 @@ async function handleUpload(e) {
     } catch (e) {
         ui.showToast(e.message, 'error');
     } finally {
-        ui.setUploadLoading(false);
+        stopUploadSimulation(btn);
     }
 }
 
@@ -62,11 +89,10 @@ async function handleDeleteDocument(id) {
 
 function handleSelectDocument(id) {
     state.setCurrentDocument(id);
-    ui.renderDocumentList(handleSelectDocument, handleDeleteDocument); // Re-render to show active state
+    ui.renderDocumentList(handleSelectDocument, handleDeleteDocument);
     ui.renderChatHeader();
     ui.toggleEmptyState(false);
     
-    // Clear chat history on switch
     document.getElementById('chat-history').innerHTML = '';
 }
 
@@ -88,16 +114,13 @@ async function handleSendMessage() {
         const data = await api.askQuestion(state.currentDocumentId, question);
         ui.appendAssistantMessage(data.answer, data.sources);
     } catch (e) {
-        // Remove skeleton and show error
         const skeleton = document.getElementById('chat-skeleton');
         if (skeleton) skeleton.remove();
         ui.showToast(e.message, 'error');
     }
 }
 
-// Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Bind events
     document.getElementById('file-upload').addEventListener('change', handleUpload);
     document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-upload').click());
     
@@ -110,9 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sidebar').classList.toggle('open');
     });
     
-    // Initialize Lucide Icons
     if (window.lucide) window.lucide.createIcons();
-    
-    // Load initial data
     loadDocuments();
 });
