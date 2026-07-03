@@ -74,7 +74,7 @@ Create a `.env` file in the `backend/` directory:
 
 ```env
 SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 GROQ_API_KEY=your-groq-api-key
 GROQ_MODEL=llama3-8b-8192
 SIMILARITY_THRESHOLD=0.3
@@ -129,11 +129,3 @@ See [deployment.md](docs/deployment.md) for full instructions on deploying to Re
 - [ ] Multi-document cross-referencing queries
 - [ ] Support for DOCX and TXT files
 - [ ] Streaming LLM responses (Server-Sent Events)
-
----
-
-## License
-MIT License.
-
-## Author
-Open Source AI Community.
