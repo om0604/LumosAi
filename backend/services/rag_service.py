@@ -1,11 +1,36 @@
 from typing import List, Dict, Any
+import threading
+import logging
 from sentence_transformers import SentenceTransformer
 from groq import Groq
 from config import config
 from database import get_supabase
 
-# Load embedding model globally to avoid reloading on every request
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
+logger = logging.getLogger(__name__)
+
+# Lazy-loading singleton state for the embedding model
+_embedder = None
+_embedder_lock = threading.Lock()
+
+def get_embedder() -> SentenceTransformer:
+    """
+    Lazy-load the SentenceTransformer embedding model in a thread-safe manner.
+    This prevents the model from loading during application startup (saving memory)
+    and defers loading until the first request that requires embeddings.
+    """
+    global _embedder
+    if _embedder is None:
+        with _embedder_lock:
+            # Double-checked locking to avoid race conditions across threads
+            if _embedder is None:
+                try:
+                    logger.info("Initializing SentenceTransformer model (lazy-loaded)...")
+                    _embedder = SentenceTransformer('all-MiniLM-L6-v2')
+                    logger.info("SentenceTransformer model initialized successfully.")
+                except Exception as e:
+                    logger.error(f"Failed to load embedding model: {e}")
+                    raise RuntimeError("Embedding model failed to initialize.") from e
+    return _embedder
 
 def build_index(chunks: List[Dict[str, Any]], document_id: str) -> None:
     """
@@ -16,6 +41,8 @@ def build_index(chunks: List[Dict[str, Any]], document_id: str) -> None:
         document_id: The UUID of the document these chunks belong to.
     """
     texts = [chunk['content'] for chunk in chunks]
+    
+    embedder = get_embedder()
     embeddings = embedder.encode(texts, show_progress_bar=False)
     
     supabase = get_supabase()
@@ -51,6 +78,8 @@ def retrieve(query: str, document_id: str, top_k: int = 5) -> List[Dict[str, Any
         List of relevant contexts with page numbers and relevance scores.
     """
     supabase = get_supabase()
+    
+    embedder = get_embedder()
     query_embedding = embedder.encode([query])[0].tolist()
     
     response = supabase.rpc(
