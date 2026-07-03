@@ -1,7 +1,6 @@
 from typing import List, Dict, Any
 import threading
 import logging
-from sentence_transformers import SentenceTransformer
 from groq import Groq
 from config import config
 from database import get_supabase
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 _embedder = None
 _embedder_lock = threading.Lock()
 
-def get_embedder() -> SentenceTransformer:
+def get_embedder() -> Any:
     """
     Lazy-load the SentenceTransformer embedding model in a thread-safe manner.
     This prevents the model from loading during application startup (saving memory)
@@ -24,7 +23,8 @@ def get_embedder() -> SentenceTransformer:
             # Double-checked locking to avoid race conditions across threads
             if _embedder is None:
                 try:
-                    logger.info("Initializing SentenceTransformer model (lazy-loaded)...")
+                    logger.info("Importing and initializing SentenceTransformer model (lazy-loaded)...")
+                    from sentence_transformers import SentenceTransformer
                     _embedder = SentenceTransformer('all-MiniLM-L6-v2')
                     logger.info("SentenceTransformer model initialized successfully.")
                 except Exception as e:
