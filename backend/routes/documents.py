@@ -8,45 +8,94 @@ from database import get_supabase
 from ingest import process_pdf
 from services.rag_service import build_index
 from storage import upload_bytes_to_storage, delete_file_from_storage, download_file_from_storage
+import gc
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 def process_document_background(document_id: str, storage_path: str, safe_filename: str):
-    # =====================================================================
-    # DIAGNOSTIC MODE — STEP 2 DIAGNOSTIC: BackgroundTask execution probe
-    # All PDF parsing, embedding, and storage logic is intentionally disabled.
-    # To restore the original pipeline, replace this entire function body
-    # with the full implementation from git history or the walkthrough.md doc.
-    # =====================================================================
-    import traceback
+    """
+    Heavy processing executed as a FastAPI BackgroundTask after the upload
+    endpoint has already returned HTTP 200.
+
+    Stages:
+      1. Download PDF from Supabase Storage
+      2. Extract text and chunk it
+      3. Generate embeddings via Jina AI
+      4. Insert embeddings into pgvector
+      5. Update document status to Ready
+
+    Any unhandled exception marks the document as Failed so it never
+    stays stuck in Processing.
+    """
+    logger.info("========== Document Processing Started ==========")
+    logger.info(f"[Document: {document_id}] Filename: {safe_filename}")
+    logger.info(f"[Document: {document_id}] Storage Path: {storage_path}")
+    start_time = time.time()
+
+    supabase = get_supabase()
 
     try:
-        print("--------------------------------------------------")
-        print("========== BACKGROUND TASK STARTED ==========")
-        print(f"Document ID: {document_id}")
-        print(f"Filename:    {safe_filename}")
-        print("--------------------------------------------------")
+        # ── Stage 1: Download ────────────────────────────────────────────
+        logger.info(f"[Document: {document_id}] Stage: Downloading PDF")
+        try:
+            file_bytes = download_file_from_storage(storage_path)
+            logger.info(f"[Document: {document_id}] Download completed")
+        except Exception as e:
+            logger.exception(f"[Document: {document_id}] Failed to download PDF from storage.")
+            raise
 
-        supabase = get_supabase()
+        # ── Stage 2: Extract text and chunk ─────────────────────────────
+        logger.info(f"[Document: {document_id}] Stage: PDF Extraction and Chunking")
+        try:
+            pdf_stream = io.BytesIO(file_bytes)
+            chunks, page_count = process_pdf(pdf_stream)
+            logger.info(f"[Document: {document_id}] Extracted {page_count} pages")
+            logger.info(f"[Document: {document_id}] Created {len(chunks)} chunks")
+        except Exception:
+            logger.exception(f"[Document: {document_id}] Failed during PDF extraction and chunking.")
+            raise
 
-        supabase.table("documents").update({"status": "Ready"}).eq("id", document_id).execute()
+        if not chunks:
+            raise ValueError("No readable text found in PDF.")
 
-        print("--------------------------------------------------")
-        print("Database update successful.")
-        print("--------------------------------------------------")
+        # ── Stage 3 & 4: Embed and insert ────────────────────────────────
+        logger.info(f"[Document: {document_id}] Stage: Embedding Generation and Database Insertion")
+        try:
+            build_index(chunks, document_id)
+        except Exception:
+            logger.exception(f"[Document: {document_id}] Failed during embedding generation and database insertion.")
+            raise
 
-        print("--------------------------------------------------")
-        print("========== BACKGROUND TASK FINISHED ==========")
-        print("--------------------------------------------------")
+        # ── Stage 5: Update metadata ──────────────────────────────────────
+        logger.info(f"[Document: {document_id}] Stage: Updating metadata")
+        try:
+            supabase.table("documents").update({
+                "status": "Ready",
+                "page_count": page_count,
+                "chunk_count": len(chunks),
+            }).eq("id", document_id).execute()
+            logger.info(f"[Document: {document_id}] Document Ready")
+        except Exception:
+            logger.exception(f"[Document: {document_id}] Failed to update document metadata to Ready.")
+            raise
+
+        # ── Cleanup ───────────────────────────────────────────────────────
+        del chunks, file_bytes, pdf_stream
+        gc.collect()
+
+        total_time = time.time() - start_time
+        logger.info(f"[Document: {document_id}] Total processing time: {total_time:.2f} sec")
+        logger.info("========== Finished ==========")
 
     except Exception:
-        print(traceback.format_exc())
-        print("BACKGROUND TASK FAILED")
         try:
-            get_supabase().table("documents").update({"status": "Failed"}).eq("id", document_id).execute()
-        except Exception:
-            print(traceback.format_exc())
+            supabase.table("documents").update({"status": "Failed"}).eq("id", document_id).execute()
+        except Exception as db_e:
+            logger.error(f"[Document: {document_id}] Could not set status to Failed: {db_e}")
+
+
 
 
 @router.get("/")

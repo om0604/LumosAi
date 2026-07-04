@@ -8,6 +8,10 @@ class Config:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
     SIMILARITY_THRESHOLD: float = float(os.getenv("SIMILARITY_THRESHOLD", "1.5"))
+
+    # Jina AI Embedding API
+    JINA_API_KEY: str = os.getenv("JINA_API_KEY", "")
+    JINA_EMBEDDING_MODEL: str = os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3")
     
     # Supabase Phase 2 Configuration
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
