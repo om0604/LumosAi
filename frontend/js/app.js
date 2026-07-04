@@ -4,6 +4,10 @@ import * as ui from './ui.js';
 
 let uploadSimulationInterval;
 
+// Polling configuration for background processing
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_DURATION_MS = 60000;
+
 async function loadDocuments() {
     try {
         const docs = await api.fetchDocuments();
@@ -31,7 +35,6 @@ function startUploadSimulation(btn) {
     let i = 0;
     btn.disabled = true;
     
-    // Initial state
     btn.innerHTML = `<div class="upload-status flex items-center justify-center gap-sm" style="animation: slideIn 200ms ease;"><i data-lucide="loader" class="spinner"></i>${states[0]}</div>`;
     if (window.lucide) window.lucide.createIcons();
     
@@ -44,9 +47,67 @@ function startUploadSimulation(btn) {
     }, 2000);
 }
 
+function setButtonProcessing(btn) {
+    clearInterval(uploadSimulationInterval);
+    btn.disabled = true;
+    btn.innerHTML = `<div class="upload-status flex items-center justify-center gap-sm"><i data-lucide="loader" class="spinner"></i>Processing…</div>`;
+    if (window.lucide) window.lucide.createIcons();
+}
+
 function stopUploadSimulation(btn) {
     clearInterval(uploadSimulationInterval);
     ui.resetUploadButton(btn);
+}
+
+async function pollDocumentStatus(documentId, btn) {
+    const startTime = Date.now();
+
+    return new Promise((resolve) => {
+        const interval = setInterval(async () => {
+            const elapsed = Date.now() - startTime;
+
+            if (elapsed >= POLL_MAX_DURATION_MS) {
+                clearInterval(interval);
+                ui.showToast("Processing is taking longer than expected. The document will update when ready.", 'error');
+                stopUploadSimulation(btn);
+                resolve();
+                return;
+            }
+
+            try {
+                const docs = await api.fetchDocuments();
+                state.setDocuments(docs);
+                ui.renderDocumentList(handleSelectDocument, handleDeleteDocument);
+
+                const doc = docs.find(d => d.id === documentId);
+                if (!doc) {
+                    clearInterval(interval);
+                    stopUploadSimulation(btn);
+                    resolve();
+                    return;
+                }
+
+                if (doc.status === 'Ready') {
+                    clearInterval(interval);
+                    stopUploadSimulation(btn);
+                    ui.showToast("Document ready!", 'success');
+                    handleSelectDocument(doc.id);
+                    resolve();
+                    return;
+                }
+
+                if (doc.status === 'Failed') {
+                    clearInterval(interval);
+                    stopUploadSimulation(btn);
+                    ui.showToast("Document processing failed.", 'error');
+                    resolve();
+                    return;
+                }
+            } catch (e) {
+                // Polling failure is non-fatal — keep trying
+            }
+        }, POLL_INTERVAL_MS);
+    });
 }
 
 async function handleUpload(e) {
@@ -58,12 +119,12 @@ async function handleUpload(e) {
     startUploadSimulation(btn);
     
     try {
-        await api.uploadDocument(file);
-        ui.showToast("Document successfully processed!", 'success');
+        const result = await api.uploadDocument(file);
+        setButtonProcessing(btn);
         await loadDocuments();
+        await pollDocumentStatus(result.id, btn);
     } catch (e) {
         ui.showToast(e.message, 'error');
-    } finally {
         stopUploadSimulation(btn);
     }
 }

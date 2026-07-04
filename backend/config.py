@@ -12,15 +12,27 @@ class Config:
     # Jina AI Embedding API
     JINA_API_KEY: str = os.getenv("JINA_API_KEY", "")
     JINA_EMBEDDING_MODEL: str = os.getenv("JINA_EMBEDDING_MODEL", "jina-embeddings-v3")
-    
-    # Supabase Phase 2 Configuration
+
+    # Supabase
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     SUPABASE_BUCKET: str = os.getenv("SUPABASE_BUCKET", "documents")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-    
-    # Base directory of the backend to resolve paths robustly
-    BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR: str = os.path.join(BASE_DIR, "data")
+
+    def validate(self):
+        """Raise RuntimeError if any required configuration is missing."""
+        required = {
+            "SUPABASE_URL": self.SUPABASE_URL,
+            "SUPABASE_SERVICE_ROLE_KEY": self.SUPABASE_SERVICE_ROLE_KEY,
+            "SUPABASE_BUCKET": self.SUPABASE_BUCKET,
+            "GROQ_API_KEY": self.GROQ_API_KEY,
+            "JINA_API_KEY": self.JINA_API_KEY,
+        }
+        missing = [k for k, v in required.items() if not v]
+        if missing:
+            raise RuntimeError(
+                f"Missing required environment variables: {', '.join(missing)}. "
+                f"Set them in your .env file or deployment environment."
+            )
 
 config = Config()

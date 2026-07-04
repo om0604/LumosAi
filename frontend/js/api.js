@@ -45,7 +45,6 @@ export async function uploadDocument(file) {
     const formData = new FormData();
     formData.append("file", file);
     
-    // This is synchronous (blocking) because the backend handles chunking synchronously
     const res = await fetch(`${CONFIG.API_BASE_URL}/documents/`, {
         method: "POST",
         body: formData

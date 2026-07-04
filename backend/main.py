@@ -1,34 +1,58 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import config
 from routes import chat, documents
 from database import get_supabase
 
-app = FastAPI(title="AI Document Intelligence Platform")
+# Validate configuration at startup — fail fast if secrets are missing
+config.validate()
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Lumos — AI Document Intelligence Platform")
+
 
 @app.get("/api/health")
 def health_check():
-    supabase = get_supabase()
+    """
+    Lightweight health check that verifies database connectivity
+    and configuration status for all external services.
+    """
     db_status = "disconnected"
-    storage_status = "disconnected"
+    storage_status = "configured" if config.SUPABASE_BUCKET else "missing_bucket"
+    embedding_status = "configured" if config.JINA_API_KEY else "missing_key"
+    llm_status = "configured" if config.GROQ_API_KEY else "missing_key"
+
     try:
+        supabase = get_supabase()
         supabase.table("documents").select("id").limit(1).execute()
         db_status = "connected"
-        storage_status = "connected" # Since they use the same client/url
-    except Exception:
-        pass
-        
+    except Exception as e:
+        logger.warning(f"Health check — database probe failed: {e}")
+
+    all_ok = (
+        db_status == "connected"
+        and storage_status == "configured"
+        and embedding_status == "configured"
+        and llm_status == "configured"
+    )
+
     return {
-        "status": "healthy" if db_status == "connected" else "degraded",
+        "status": "healthy" if all_ok else "degraded",
         "database": db_status,
-        "storage": storage_status
+        "storage": storage_status,
+        "embedding_provider": embedding_status,
+        "llm_provider": llm_status,
     }
+
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://lumos-ai-ten.vercel.app", 
-        "http://localhost:8080" # keep local development origin for safety
+        "https://lumos-ai-ten.vercel.app",
+        "http://localhost:8080",
     ],
     allow_credentials=True,
     allow_methods=["*"],

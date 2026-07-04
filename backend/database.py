@@ -12,7 +12,3 @@ def get_supabase() -> Client:
         _supabase = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY)
     return _supabase
 
-def get_db():
-    # Placeholder for direct SQLAlchemy/asyncpg connections if needed later.
-    # Currently we rely on get_supabase() for DB operations via PostgREST.
-    pass
