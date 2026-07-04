@@ -13,86 +13,40 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 def process_document_background(document_id: str, storage_path: str, safe_filename: str):
-    import gc
-    logger.info("========== Document Processing Started ==========")
-    logger.info(f"[Document: {document_id}] Filename: {safe_filename}")
-    logger.info(f"[Document: {document_id}] Storage Path: {storage_path}")
-    start_time = time.time()
-    logger.info(f"[Document: {document_id}] Start Time: {start_time}")
-    
-    supabase = get_supabase()
-    
+    # =====================================================================
+    # DIAGNOSTIC MODE — STEP 2 DIAGNOSTIC: BackgroundTask execution probe
+    # All PDF parsing, embedding, and storage logic is intentionally disabled.
+    # To restore the original pipeline, replace this entire function body
+    # with the full implementation from git history or the walkthrough.md doc.
+    # =====================================================================
+    import traceback
+
     try:
-        logger.info(f"[Document: {document_id}] Stage: Downloading PDF")
-        try:
-            file_bytes = download_file_from_storage(storage_path)
-            logger.info(f"[Document: {document_id}] Download completed")
-        except Exception as e:
-            logger.exception(f"[Document: {document_id}] Failed to download PDF from storage.")
-            raise e
-        
-        logger.info(f"[Document: {document_id}] Stage: Opening PDF")
-        try:
-            pdf_stream = io.BytesIO(file_bytes)
-            chunks, page_count = process_pdf(pdf_stream)
-            logger.info(f"[Document: {document_id}] Extracted {page_count} pages")
-            logger.info(f"[Document: {document_id}] Created {len(chunks)} chunks")
-        except Exception as e:
-            logger.exception(f"[Document: {document_id}] Failed during PDF extraction and chunking.")
-            raise e
-            
-        if not chunks:
-            logger.exception(f"[Document: {document_id}] No readable text found in PDF.")
-            raise ValueError("No readable text found in PDF.")
-            
-        logger.info(f"[Document: {document_id}] Stage: Embedding Generation and Database Insertion")
-        try:
-            # --- DIAGNOSTIC MODE ---
-            logger.info("-" * 50)
-            logger.info(f"[Document: {document_id}] DIAGNOSTIC MODE ENABLED")
-            logger.info(f"[Document: {document_id}] Skipping build_index()")
-            logger.info(f"[Document: {document_id}] Embedding generation intentionally bypassed")
-            logger.info("-" * 50)
-            # build_index(chunks, document_id)
-            # -----------------------
-        except Exception as e:
-            logger.exception(f"[Document: {document_id}] Failed during embedding generation and database insertion.")
-            raise e
-            
-        logger.info(f"[Document: {document_id}] Stage: Updating metadata")
-        try:
-            supabase.table("documents").update({
-                "status": "Ready",
-                "page_count": page_count,
-                "chunk_count": len(chunks)
-            }).eq("id", document_id).execute()
-            logger.info(f"[Document: {document_id}] Document Ready")
-        except Exception as e:
-            logger.exception(f"[Document: {document_id}] Failed to update document metadata to Ready.")
-            raise e
-            
-        # Memory cleanup
-        del chunks
-        del file_bytes
-        del pdf_stream
-        gc.collect()
-        
-        total_time = time.time() - start_time
-        logger.info(f"[Document: {document_id}] Total processing time: {total_time:.2f} sec")
-        
-        # --- DIAGNOSTIC MODE ---
-        logger.info("-" * 50)
-        logger.info(f"[Document: {document_id}] Diagnostic upload completed successfully.")
-        logger.info("-" * 50)
-        # -----------------------
-        
-        logger.info("========== Finished ==========")
-        
+        print("--------------------------------------------------")
+        print("========== BACKGROUND TASK STARTED ==========")
+        print(f"Document ID: {document_id}")
+        print(f"Filename:    {safe_filename}")
+        print("--------------------------------------------------")
+
+        supabase = get_supabase()
+
+        supabase.table("documents").update({"status": "Ready"}).eq("id", document_id).execute()
+
+        print("--------------------------------------------------")
+        print("Database update successful.")
+        print("--------------------------------------------------")
+
+        print("--------------------------------------------------")
+        print("========== BACKGROUND TASK FINISHED ==========")
+        print("--------------------------------------------------")
+
     except Exception:
+        print(traceback.format_exc())
+        print("BACKGROUND TASK FAILED")
         try:
-            supabase.table("documents").update({"status": "Failed"}).eq("id", document_id).execute()
-        except Exception as db_e:
-            logger.error(f"[Document: {document_id}] Failed to update document status to Failed: {db_e}")
+            get_supabase().table("documents").update({"status": "Failed"}).eq("id", document_id).execute()
+        except Exception:
+            print(traceback.format_exc())
 
 
 @router.get("/")
