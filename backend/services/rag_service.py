@@ -40,16 +40,23 @@ def build_index(chunks: List[Dict[str, Any]], document_id: str) -> None:
         chunks: List of dictionaries containing page number and text content.
         document_id: The UUID of the document these chunks belong to.
     """
-    texts = [chunk['content'] for chunk in chunks]
-    
+    logger.info(f"[Document: {document_id}] Loading embedding model")
     embedder = get_embedder()
-    embeddings = embedder.encode(texts, show_progress_bar=False)
+    logger.info(f"[Document: {document_id}] Embedding model loaded")
     
+    logger.info(f"[Document: {document_id}] Encoding {len(chunks)} chunks")
+    texts = [chunk['content'] for chunk in chunks]
+    embeddings = embedder.encode(texts, show_progress_bar=False)
+    logger.info(f"[Document: {document_id}] Encoding finished")
+    
+    logger.info(f"[Document: {document_id}] Writing embeddings")
     supabase = get_supabase()
     batch_size = 50
+    total_batches = (len(chunks) + batch_size - 1) // batch_size
     
     # Insert in batches to prevent huge HTTP payloads
     for i in range(0, len(chunks), batch_size):
+        batch_num = (i // batch_size) + 1
         batch_chunks = chunks[i:i + batch_size]
         batch_embeddings = embeddings[i:i + batch_size]
         
@@ -64,6 +71,11 @@ def build_index(chunks: List[Dict[str, Any]], document_id: str) -> None:
             })
         
         supabase.table("document_chunks").insert(data).execute()
+        logger.info(f"[Document: {document_id}] Inserted batch {batch_num}/{total_batches}")
+        
+    import gc
+    del embeddings
+    gc.collect()
 
 def retrieve(query: str, document_id: str, top_k: int = 5) -> List[Dict[str, Any]]:
     """

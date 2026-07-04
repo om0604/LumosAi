@@ -42,3 +42,11 @@ def delete_file_from_storage(file_name: str):
     """
     supabase = get_supabase()
     supabase.storage.from_(config.SUPABASE_BUCKET).remove([file_name])
+
+def download_file_from_storage(file_name: str) -> bytes:
+    """
+    Download a file from Supabase Storage and return its bytes.
+    """
+    supabase = get_supabase()
+    return supabase.storage.from_(config.SUPABASE_BUCKET).download(file_name)
+
