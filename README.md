@@ -2,6 +2,8 @@
 
 > Chat with your documents. Upload PDFs, search instantly, and get accurate answers with cited sources.
 
+**🌐 Live Demo:** [https://lumos-ai-ten.vercel.app/](https://lumos-ai-ten.vercel.app/)
+
 Lumos is an open-source AI Document Intelligence Platform. It allows users to upload multiple PDF documents, automatically chunks and indexes the text using Jina AI embeddings, and provides a chat interface to ask questions about the documents using Retrieval-Augmented Generation (RAG).
 
 ---
