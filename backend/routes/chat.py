@@ -9,7 +9,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/api/chat", response_model=AnswerResponse)
-@router.post("/ask", response_model=AnswerResponse) # Legacy endpoint
 def ask_question(req: QuestionRequest):
     """
     Query a specific document using Retrieval-Augmented Generation (RAG).

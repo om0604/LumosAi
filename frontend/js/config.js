@@ -1,5 +1,5 @@
 export const CONFIG = {
     // API_BASE_URL: "http://localhost:8000/api",
-    API_BASE_URL: "https://lumosai-backend-tn6r.onrender.com",
+    API_BASE_URL: "https://lumosai-backend-tn6r.onrender.com/api",
     POLL_INTERVAL: 3000 // In case we need it, though currently synchronous
 };

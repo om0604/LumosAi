@@ -26,7 +26,10 @@ def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://lumos-ai-ten.vercel.app", 
+        "http://localhost:8080" # keep local development origin for safety
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
