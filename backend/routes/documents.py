@@ -47,7 +47,14 @@ def process_document_background(document_id: str, storage_path: str, safe_filena
             
         logger.info(f"[Document: {document_id}] Stage: Embedding Generation and Database Insertion")
         try:
-            build_index(chunks, document_id)
+            # --- DIAGNOSTIC MODE ---
+            logger.info("-" * 50)
+            logger.info(f"[Document: {document_id}] DIAGNOSTIC MODE ENABLED")
+            logger.info(f"[Document: {document_id}] Skipping build_index()")
+            logger.info(f"[Document: {document_id}] Embedding generation intentionally bypassed")
+            logger.info("-" * 50)
+            # build_index(chunks, document_id)
+            # -----------------------
         except Exception as e:
             logger.exception(f"[Document: {document_id}] Failed during embedding generation and database insertion.")
             raise e
@@ -72,6 +79,13 @@ def process_document_background(document_id: str, storage_path: str, safe_filena
         
         total_time = time.time() - start_time
         logger.info(f"[Document: {document_id}] Total processing time: {total_time:.2f} sec")
+        
+        # --- DIAGNOSTIC MODE ---
+        logger.info("-" * 50)
+        logger.info(f"[Document: {document_id}] Diagnostic upload completed successfully.")
+        logger.info("-" * 50)
+        # -----------------------
+        
         logger.info("========== Finished ==========")
         
     except Exception:
