@@ -1,8 +1,8 @@
-# SwiggyRAG — Project Context
+# LumosAi — Project Context
 
 ## Executive Summary
 
-SwiggyRAG is a **Retrieval-Augmented Generation (RAG) question-answering application** that allows users to ask natural-language questions about the **Swiggy FY23 Annual Report** and receive source-grounded, LLM-generated answers. The system ingests a PDF document, chunks it, creates vector embeddings, stores them in a FAISS index, retrieves semantically similar chunks at query time, and feeds them as context to an LLM (Groq-hosted LLaMA 3.1 8B) that synthesizes a final answer. A hallucination-prevention guard rejects low-confidence retrievals.
+LumosAi is a **Retrieval-Augmented Generation (RAG) question-answering application** that allows users to ask natural-language questions about the **Swiggy FY23 Annual Report** and receive source-grounded, LLM-generated answers. The system ingests a PDF document, chunks it, creates vector embeddings, stores them in a FAISS index, retrieves semantically similar chunks at query time, and feeds them as context to an LLM (Groq-hosted LLaMA 3.1 8B) that synthesizes a final answer. A hallucination-prevention guard rejects low-confidence retrievals.
 
 The project is a **monorepo** with two independently runnable components:
 
@@ -80,7 +80,7 @@ There is **no database**, **no Docker**, **no CI/CD**, **no authentication**, an
 ## Folder Structure
 
 ```
-SwiggyRAG/
+LumosAi/
 ├── .gitignore                  # Ignores .env, venv, __pycache__, IDE files
 ├── README.md                   # Setup instructions, sample questions, limitations
 ├── generate_pdf.py             # Utility: creates a synthetic demo PDF

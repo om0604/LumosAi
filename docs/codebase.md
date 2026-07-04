@@ -1,4 +1,4 @@
-# SwiggyRAG — Codebase Reference
+# LumosAi — Codebase Reference
 
 ## Module 1: `backend/app.py` — API Gateway
 
@@ -578,7 +578,7 @@ This is an **approximate linear mapping** that inversely maps L2 distance to a p
 | Property | Value |
 |---|---|
 | Library | `fpdf` (FPDF class) |
-| Output | `e:/OM Professional/Projects/SwiggyRAG/backend/data/swiggy_annual_report.pdf` |
+| Output | `e:/OM Professional/Projects/LumosAi/backend/data/swiggy_annual_report.pdf` |
 | Pages | 2 |
 | Font | Arial, size 12 |
 | Content | Page 1: Revenue (4653.30 crores FY23), EBITDA, marketing spend. Page 2: Instamart, risk factors, delivery partner attrition |
